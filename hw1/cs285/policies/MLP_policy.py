@@ -81,11 +81,21 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             observation = obs[None]
 
         # TODO return the action that the policy prescribes
-        raise NotImplementedError
+        a_distribution = self.forward(observation)
+        action = a_distribution.sample()
+        return action
 
     # update/train this policy
     def update(self, observations, actions, **kwargs):
-        raise NotImplementedError
+        loss_fn = nn.NLLLoss()
+        for i in range(len(observations)):
+            o = observations[i]
+            a = actions[i]
+            distribution_from_o = self.forward(o)
+            loss = loss_fn(distribution_from_o, a)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
     # This function defines the forward pass of the network.
     # You can return anything you want, but you should be able to differentiate
@@ -93,7 +103,8 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     # return more flexible objects, such as a
     # `torch.distributions.Distribution` object. It's up to you!
     def forward(self, observation: torch.FloatTensor) -> Any:
-        raise NotImplementedError
+        mean = self.mean_net(observation)
+        return distributions.Normal(mean, scale=1)
 
 
 #####################################################
