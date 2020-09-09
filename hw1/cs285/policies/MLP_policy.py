@@ -82,20 +82,34 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 
         # TODO return the action that the policy prescribes
         a_distribution = self.forward(observation)
-        action = a_distribution.sample()
-        return action
+        # action = a_distribution.sample()
+        return a_distribution
 
     # update/train this policy
     def update(self, observations, actions, **kwargs):
-        loss_fn = nn.NLLLoss()
-        for i in range(len(observations)):
-            o = observations[i]
-            a = actions[i]
-            distribution_from_o = self.forward(o)
-            loss = loss_fn(distribution_from_o, a)
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
+        # loss_fn = nn.NLLLoss()
+        loss_fn = nn.MSELoss()
+        # for i in range(len(observations)):
+        #     o = observations[i]
+        #     a = actions[i]
+        #     mean = self.forward(o)
+        #     loss = loss_fn(mean, a)
+        #     self.optimizer.zero_grad()
+        #     loss.backward()
+        #     # distribution_from_o.log_prob (a).sum.backwards()
+        #     self.optimizer.step()
+
+        mean = self.forward(observations)
+        # print('*****')
+        # print(type(actions))
+        # print(mean)
+        # print('*****')
+        loss = loss_fn(mean, torch.tensor(actions).double().cuda())
+        self.optimizer.zero_grad()
+        loss.backward()
+        # distribution_from_o.log_prob (a).sum.backwards()
+        self.optimizer.step()
+            
 
     # This function defines the forward pass of the network.
     # You can return anything you want, but you should be able to differentiate
@@ -103,8 +117,12 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     # return more flexible objects, such as a
     # `torch.distributions.Distribution` object. It's up to you!
     def forward(self, observation: torch.FloatTensor) -> Any:
-        mean = self.mean_net(observation)
-        return distributions.Normal(mean, scale=1)
+        # print('******')
+        # print (type(observation))
+        # print('******')
+        mean = self.mean_net(torch.tensor(observation).double().cuda())
+        return mean
+        # return distributions.Normal(mean, scale=1)
 
 
 #####################################################
@@ -120,7 +138,11 @@ class MLPPolicySL(MLPPolicy):
             adv_n=None, acs_labels_na=None, qvals=None
     ):
         # TODO: update the policy and return the loss
-        loss = TODO
+        super().update (observations, actions)
+        dist = super().forward (observations)
+        # a_pred = dist.sample()
+        loss = self.loss(dist, torch.tensor(actions).double().cuda())
+        # loss = torch.tensor([1,2,3])
         return {
             # You can add extra logging information here, but keep this line
             'Training Loss': ptu.to_numpy(loss),
