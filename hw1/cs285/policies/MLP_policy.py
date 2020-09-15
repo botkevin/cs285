@@ -81,15 +81,17 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             observation = obs[None]
 
         # TODO return the action that the policy prescribes
-
-        return self(observation)
+        rv = self(ptu.from_numpy(observation))
+        # print (rv.shape)
+        # print (self.ac_dim)
+        return rv
 
         # raise NotImplementedError
 
     # update/train this policy
     def update(self, observations, actions, **kwargs):
         loss_fn = kwargs['loss_fn']
-        pred = self(observations)
+        pred = self(ptu.from_numpy(observations))
         target = ptu.from_numpy(actions)
         target.requires_grad = True
         loss = loss_fn(pred, target)
@@ -105,12 +107,14 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     # `torch.distributions.Distribution` object. It's up to you!
     def forward(self, observation: torch.FloatTensor) -> Any:
         if self.discrete:
-            return distributions.Categorical(self.logits_na(observation))
+            return self.logits_na(observation)
         else:
-            self.logstd.requires_grad = True
-            mean = self.mean_net(ptu.from_numpy(observation))
-            # noise = distributions.Normal(0, 1).sample()
-            return distributions.Normal(mean, scale=self.logstd).rsample()
+            mean = self.mean_net(observation)
+            # print (observation.shape)
+            # print (mean.shape)
+            # print (self.ac_dim)
+            # raise EnvironmentError
+            return distributions.Normal(mean, torch.exp(self.logstd)).rsample()
 
 
 #####################################################
