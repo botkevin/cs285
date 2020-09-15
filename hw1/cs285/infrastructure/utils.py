@@ -41,7 +41,10 @@ def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('
 
         # TODO end the rollout if the rollout ended
         # HINT: rollout can end due to done, or due to max_path_length
-        rollout_done = done or steps >= max_path_length # HINT: this is either 0 or 1
+        # HINT: this is either 0 or 1
+        rollout_done = 0
+        if done or steps == max_path_length:
+            rollout_done = 1
         terminals.append(rollout_done)
 
         if rollout_done:
@@ -74,12 +77,7 @@ def sample_n_trajectories(env, policy, ntraj, max_path_length, render=False, ren
         TODO implement this function
         Hint1: use sample_trajectory to get each path (i.e. rollout) that goes into paths
     """
-    paths = []
-
-    for _ in range(ntraj):
-        #TODO
-        p = sample_trajectory(env, policy, max_path_length, render, render_mode)
-        paths.append(p)
+    paths = [sample_trajectory(env, policy, max_path_length, render, render_mode) for _ in range(ntraj)]
 
     return paths
 

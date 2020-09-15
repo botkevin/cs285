@@ -81,34 +81,21 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             observation = obs[None]
 
         # TODO return the action that the policy prescribes
-        a_distribution = self.forward(observation)
-        # action = a_distribution.sample()
-        return a_distribution
+        return self(ptu.from_numpy(observation))
 
     # update/train this policy
     def update(self, observations, actions, **kwargs):
         # loss_fn = nn.NLLLoss()
-        loss_fn = nn.MSELoss()
         # for i in range(len(observations)):
         #     o = observations[i]
         #     a = actions[i]
-        #     mean = self.forward(o)
-        #     loss = loss_fn(mean, a)
+        #     a_pred = self.forward(o)
+        #     loss = loss_fn(a_pred, a)
         #     self.optimizer.zero_grad()
         #     loss.backward()
-        #     # distribution_from_o.log_prob (a).sum.backwards()
         #     self.optimizer.step()
-
-        mean = self.forward(observations)
-        # print('*****')
-        # print(type(actions))
-        # print(mean)
-        # print('*****')
-        loss = loss_fn(mean, torch.tensor(actions).double().cuda())
-        self.optimizer.zero_grad()
-        loss.backward()
-        # distribution_from_o.log_prob (a).sum.backwards()
-        self.optimizer.step()
+        # return loss
+        raise NotImplementedError
             
 
     # This function defines the forward pass of the network.
@@ -120,8 +107,8 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         # print('******')
         # print (type(observation))
         # print('******')
-        mean = self.mean_net(torch.tensor(observation).double().cuda())
-        return mean
+        mean = self.mean_net(observation)
+        return distributions.Normal(mean, self.logstd).rsample()
         # return distributions.Normal(mean, scale=1)
 
 
@@ -138,11 +125,14 @@ class MLPPolicySL(MLPPolicy):
             adv_n=None, acs_labels_na=None, qvals=None
     ):
         # TODO: update the policy and return the loss
-        super().update (observations, actions)
-        dist = super().forward (observations)
-        # a_pred = dist.sample()
-        loss = self.loss(dist, torch.tensor(actions).double().cuda())
-        # loss = torch.tensor([1,2,3])
+        
+        self.optimizer.zero_grad()
+        output = self.get_action(observations)
+        target = ptu.from_numpy(actions)
+        loss = self.loss(output, target)
+        loss.backward()
+        self.optimizer.step()
+
         return {
             # You can add extra logging information here, but keep this line
             'Training Loss': ptu.to_numpy(loss),

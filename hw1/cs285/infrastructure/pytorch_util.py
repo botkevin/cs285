@@ -52,7 +52,7 @@ def build_mlp(
     for _ in range(n_layers):
         layers += [nn.Linear(size, size), activation]
     layers += [nn.Linear(size, output_size), output_activation]
-    return nn.Sequential(*layers).double()
+    return nn.Sequential(*layers)
 
 
 device = None
