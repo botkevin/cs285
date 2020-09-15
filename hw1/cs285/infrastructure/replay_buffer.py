@@ -63,7 +63,7 @@ class ReplayBuffer(object):
     ########################################
     ########################################
 
-    def sample_random_data(self, batch_size):
+    def sample_random_data(self, batch_size: int):
         assert (
                 self.obs.shape[0]
                 == self.acs.shape[0]
@@ -76,8 +76,15 @@ class ReplayBuffer(object):
         ## HINT 1: use np.random.permutation to sample random indices
         ## HINT 2: return corresponding data points from each array (i.e., not different indices from each array)
         ## HINT 3: look at the sample_recent_data function below
-        l = np.random.permutation(batch_size)
-        return self.obs[l], self.acs[l], self.rews[l], self.next_obs[l], self.terminals[l]
+
+        idx = np.random.permutation(batch_size)
+        return (
+            self.obs[idx],
+            self.acs[idx],
+            self.rews[idx],
+            self.next_obs[idx],
+            self.terminals[idx]
+        )
 
     def sample_recent_data(self, batch_size=1):
         return (

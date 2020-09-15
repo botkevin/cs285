@@ -1,7 +1,6 @@
 from collections import OrderedDict
 import numpy as np
 import time
-
 import pickle
 
 import gym
@@ -141,10 +140,10 @@ class RL_Trainer(object):
 
     def collect_training_trajectories(
             self,
-            itr,
+            itr: int,
             load_initial_expertdata,
             collect_policy,
-            batch_size,
+            batch_size: int,
     ):
         """
         :param itr:
@@ -163,11 +162,8 @@ class RL_Trainer(object):
                 # ``` return loaded_paths, 0, None ```
 
                 # (2) collect `self.params['batch_size']` transitions
-
-                
-        # mycode
-        if itr == 0: 
-            # first iteration load data
+        
+        if itr == 0:
             with open(load_initial_expertdata, 'rb') as f:
                 loaded_paths = pickle.load(f)
             return loaded_paths, 0, None
@@ -175,6 +171,7 @@ class RL_Trainer(object):
         # TODO collect `batch_size` samples to be used for training
         # HINT1: use sample_trajectories from utils
         # HINT2: you want each of these collected rollouts to be of length self.params['ep_len']
+
         print("\nCollecting data to be used for training...")
         paths, envsteps_this_batch = utils.sample_trajectories(
             self.env, collect_policy, batch_size, self.params['ep_len'])
@@ -199,12 +196,14 @@ class RL_Trainer(object):
             # TODO sample some data from the data buffer
             # HINT1: use the agent's sample function
             # HINT2: how much data = self.params['train_batch_size']
+
             ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample(
                 self.params['train_batch_size'])
 
             # TODO use the sampled data to train an agent
             # HINT: use the agent's train function
             # HINT: keep the agent's training log for debugging
+
             train_log = self.agent.train(
                 ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
             all_logs.append(train_log)
@@ -219,7 +218,6 @@ class RL_Trainer(object):
 
         for pi in paths:
             pi["action"] = expert_policy.get_action(pi["observation"])
-
         return paths
 
     ####################################

@@ -81,22 +81,22 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             observation = obs[None]
 
         # TODO return the action that the policy prescribes
-        return self(ptu.from_numpy(observation))
+
+        return self(observation)
+
+        # raise NotImplementedError
 
     # update/train this policy
     def update(self, observations, actions, **kwargs):
-        # loss_fn = nn.NLLLoss()
-        # for i in range(len(observations)):
-        #     o = observations[i]
-        #     a = actions[i]
-        #     a_pred = self.forward(o)
-        #     loss = loss_fn(a_pred, a)
-        #     self.optimizer.zero_grad()
-        #     loss.backward()
-        #     self.optimizer.step()
-        # return loss
-        raise NotImplementedError
-            
+        loss_fn = kwargs['loss_fn']
+        pred = self(observations)
+        target = ptu.from_numpy(actions)
+        target.requires_grad = True
+        loss = loss_fn(pred, target)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        return loss.detach()
 
     # This function defines the forward pass of the network.
     # You can return anything you want, but you should be able to differentiate
@@ -104,12 +104,13 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     # return more flexible objects, such as a
     # `torch.distributions.Distribution` object. It's up to you!
     def forward(self, observation: torch.FloatTensor) -> Any:
-        # print('******')
-        # print (type(observation))
-        # print('******')
-        mean = self.mean_net(observation)
-        return distributions.Normal(mean, self.logstd).rsample()
-        # return distributions.Normal(mean, scale=1)
+        if self.discrete:
+            return distributions.Categorical(self.logits_na(observation))
+        else:
+            self.logstd.requires_grad = True
+            mean = self.mean_net(ptu.from_numpy(observation))
+            # noise = distributions.Normal(0, 1).sample()
+            return distributions.Normal(mean, scale=self.logstd).rsample()
 
 
 #####################################################
@@ -125,13 +126,18 @@ class MLPPolicySL(MLPPolicy):
             adv_n=None, acs_labels_na=None, qvals=None
     ):
         # TODO: update the policy and return the loss
-        
-        self.optimizer.zero_grad()
-        output = self.get_action(observations)
-        target = ptu.from_numpy(actions)
-        loss = self.loss(output, target)
-        loss.backward()
-        self.optimizer.step()
+        # for i in range(len(observations)):
+        #     o = observations[i]
+        #     a = actions[i]
+
+        # self.optimizer.zero_grad()
+        # output = self(observations).rsample()
+        # target = ptu.from_numpy(actions)
+        # loss = self.loss(output, target)
+        # loss.backward()
+        # self.optimizer.step()
+
+        loss = super().update(observations, actions, loss_fn=self.loss)
 
         return {
             # You can add extra logging information here, but keep this line

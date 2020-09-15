@@ -47,12 +47,14 @@ def build_mlp(
 
     # TODO: return a MLP. This should be an instance of nn.Module
     # Note: nn.Sequential is an instance of nn.Module.
+
     layers = []
     layers += [nn.Linear(input_size, size), activation]
     for _ in range(n_layers):
         layers += [nn.Linear(size, size), activation]
     layers += [nn.Linear(size, output_size), output_activation]
     return nn.Sequential(*layers)
+    # raise NotImplementedError
 
 
 device = None
@@ -60,7 +62,8 @@ device = None
 
 def init_gpu(use_gpu=True, gpu_id=0):
     global device
-    if torch.cuda.is_available() and use_gpu:
+    # if torch.cuda.is_available() and use_gpu:
+    if False:
         device = torch.device("cuda:" + str(gpu_id))
         print("Using GPU id {}".format(gpu_id))
     else:
