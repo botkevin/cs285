@@ -31,8 +31,10 @@ class RNDModel(nn.Module, BaseExplorationModel):
         # HINT 1) Check out the method ptu.build_mlp
         # HINT 2) There are two weight init methods defined above
 
-        self.f = None
-        self.f_hat = None
+        self.f = ptu.build_mlp (self.ob_dim, output_size, self.n_layers, self.size)
+        self.f_hat = ptu.build_mlp (self.ob_dim, output_size, self.n_layers, self.size)
+        init_method_1 (self.f)
+        init_method_2 (self.f_hat)
         
         self.optimizer = self.optimizer_spec.constructor(
             self.f_hat.parameters(),
@@ -49,7 +51,9 @@ class RNDModel(nn.Module, BaseExplorationModel):
     def forward(self, ob_no):
         # TODO: Get the prediction error for ob_no
         # HINT: Remember to detach the output of self.f!
-        error = None
+        eps = self.f(ob_no).detach() - self.f_hat(ob_no).detach() 
+        error = torch.linalg.norm (eps, axis=1)
+        print (eps.shape, error.shape)
         return error
 
     def forward_np(self, ob_no):
@@ -60,5 +64,5 @@ class RNDModel(nn.Module, BaseExplorationModel):
     def update(self, ob_no):
         # TODO: Update f_hat using ob_no
         # Hint: Take the mean prediction error across the batch
-        loss = None
+        loss = torch.mean(self.forward (ob_no))
         return loss.item()
