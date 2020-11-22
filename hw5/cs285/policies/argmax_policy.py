@@ -25,7 +25,7 @@ class ArgMaxPolicy(object):
         action = np.argmax(actions, axis=1)
         # print (actions)
 
-        return action.squeeze()
+        return action.squeeze().item()
         
     ####################################
     ####################################

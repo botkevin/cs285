@@ -79,7 +79,9 @@ def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('
         obs.append(ob)
         # HINT: query the policy's get_action function
         ac = policy.get_action(ob)
-        # ac = ac[0]
+        # print (ac)
+        # ac = ac.item()
+        # print (type(ac))
         acs.append(ac)
 
         # take that action and record results
