@@ -32,7 +32,7 @@ class RNDModel(nn.Module, BaseExplorationModel):
         # HINT 2) There are two weight init methods defined above
 
         self.f = ptu.build_mlp (self.ob_dim, self.output_size, self.n_layers, self.size, init_method=init_method_1)
-        self.f_hat = ptu.build_mlp (self.ob_dim, self.output_size, self.n_layers, self.size, init_method=init_method_1)
+        self.f_hat = ptu.build_mlp (self.ob_dim, self.output_size, self.n_layers, self.size, init_method=init_method_2)
         
         self.optimizer = self.optimizer_spec.constructor(
             self.f_hat.parameters(),

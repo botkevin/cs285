@@ -71,6 +71,8 @@ def main():
     parser.add_argument('--scalar_log_freq', type=int, default=int(1e3))
     parser.add_argument('--save_params', action='store_true')
 
+    parser.add_argument ('--l2_info', action='store_true')
+
     args = parser.parse_args()
 
     # convert to dictionary
